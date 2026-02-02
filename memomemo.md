@@ -67,7 +67,7 @@ If Pandoc LaTeX environment is available, and you include `awesomebox` in your `
 Installation is easy, just:
 
 ```
- pip install pandoc-latex-environment
+ pipx install pandoc-latex-environment
 ```
 
 \newpage
