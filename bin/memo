@@ -165,8 +165,10 @@ PREPROCESSED_MD="${BASENAME}_preprocessed.md"
 LOG_FILE="${BASENAME}_processing.log"
 (( INFO )) && : >"$LOG_FILE"
 
-BASE_PATH=$(realpath -m "$0/../..")
-export TEXINPUTS=".:$BASE_PATH:"
+BASE_PATH=$(dirname "$(readlink -f "$0")")/..
+
+export TEXINPUTS="$BASE_PATH:"
+
 M4_PARAMS+=(
   "--include=$BASE_PATH"
   "-D__DATE__=$D" "-D__TIME__=$T" "-D__BRANCH__=$BRANCH"
