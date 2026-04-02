@@ -165,7 +165,12 @@ PREPROCESSED_MD="${BASENAME}_preprocessed.md"
 LOG_FILE="${BASENAME}_processing.log"
 (( INFO )) && : >"$LOG_FILE"
 
+BASE_PATH=$(dirname "$(readlink -f "$0")")/..
+
+export TEXINPUTS="$BASE_PATH:"
+
 M4_PARAMS+=(
+  "--include=$BASE_PATH"
   "-D__DATE__=$D" "-D__TIME__=$T" "-D__BRANCH__=$BRANCH"
   "-D__REVISION__=$REVISION" "-D__TAG__=$TAG" "-D__FILENAME__=$ABS_MD"
 )
@@ -231,10 +236,10 @@ pandoc_common=(
 ###############################################################################
 # 9 – Build flow
 ###############################################################################
+
 if (( GLOSSARY || NOMENCL || FORCE_TEX )); then
   # 9a – TeX intermediate path
   quiet_or_log pandoc "${pandoc_common[@]}" --extract-media=mermaid-img -o "${BASENAME}.tex"
-
   run_xelatex "${BASENAME}.tex"        # pass 1
 
   if (( GLOSSARY || NOMENCL )); then
