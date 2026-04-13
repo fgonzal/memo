@@ -27,9 +27,12 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     ca-certificates \
     git
 
-# Tell puppeteer to use the system chromium instead of downloading its own
+# Tell puppeteer to use the system chromium instead of downloading its own.
+# MERMAID_FILTER_PUPPETEER_CFG points mermaid-filter at a config that passes
+# --no-sandbox, which is required when running as root inside a container.
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium \
+    MERMAID_FILTER_PUPPETEER_CONFIG=/opt/memo/puppeteer-cfg.json
 
 # mermaid-filter (cache npm's download directory across builds)
 RUN --mount=type=cache,target=/root/.npm \
@@ -60,7 +63,10 @@ RUN curl -sSL \
 # Copy the repo into the image so bin/memo, backgrounds/, etc. are all present.
 # BASE_PATH in the memo script resolves to /opt/memo, which is correct.
 COPY . /opt/memo/
-RUN chmod +x /opt/memo/bin/memo
+RUN chmod +x /opt/memo/bin/memo \
+    && echo '{"args":["--no-sandbox","--disable-setuid-sandbox"]}' \
+       > /opt/memo/puppeteer-cfg.json \
+    && git config --global --add safe.directory '*'
 
 COPY docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh

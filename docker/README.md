@@ -166,6 +166,21 @@ reference them anywhere in your Markdown:
 | `__TAG__` | Git tag or short hash |
 | `__FILENAME__` | Absolute path of the source file |
 
+> **Git variables require the repository root to be mounted.**
+> The container resolves `__REVISION__`, `__BRANCH__`, and `__TAG__` by running
+> `git` against `/work`. If you mount a subdirectory (e.g. `doc/`) instead of
+> the repository root, git cannot find `.git` and these variables fall back to
+> `unknown`. Always run the container from the repository root and pass the file
+> path relative to it:
+>
+> ```bash
+> # From the repo root — git variables work
+> docker run --rm -v $(pwd):/work memo doc/card-reissue.md
+>
+> # From inside doc/ — git variables will be 'unknown'
+> docker run --rm -v $(pwd):/work memo card-reissue.md
+> ```
+
 You can also define your own with `-DNAME=VALUE`:
 
 ```bash
@@ -186,4 +201,18 @@ Then just use:
 ```bash
 memo myfile.md
 memo myfile.md double --glossary
+```
+
+Because the alias mounts `$(pwd)`, **invoke it from the repository root** so
+that git variables (`__REVISION__`, `__BRANCH__`, `__TAG__`) resolve correctly.
+Pass the path to your document relative to that root:
+
+```bash
+# Correct — run from repo root
+cd /path/to/repo
+memo doc/card-reissue.md
+
+# Incorrect — git variables will be 'unknown'
+cd /path/to/repo/doc
+memo card-reissue.md
 ```
