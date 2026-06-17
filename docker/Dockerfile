@@ -8,6 +8,15 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Install non-TeX dependencies.
 # BuildKit cache mount keeps the apt cache across builds so packages are not
 # re-downloaded when this layer is invalidated.
+# Install Node.js 22 from NodeSource before the main apt layer so the
+# nodejs/npm packages below come from the NodeSource repo, not the Ubuntu
+# default (which can be 12.x on older Ubuntu bases and is too old for
+# mermaid-filter).
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && apt-get install -y --no-install-recommends curl ca-certificates \
+    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
+
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     apt-get update && apt-get install -y --no-install-recommends \
@@ -15,15 +24,15 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     pandoc \
     # M4 macro processor
     m4 \
-    # Node.js + npm for mermaid-filter
+    # Node.js + npm (from NodeSource, installed above)
     nodejs \
-    npm \
     # Chromium for puppeteer (used by mermaid-filter)
     chromium \
     # pipx for pandoc-latex-environment
     pipx \
+    # SVG → PDF conversion (required for mermaid diagrams embedded as SVG)
+    librsvg2-bin \
     # Misc
-    curl \
     ca-certificates \
     git
 
@@ -64,7 +73,7 @@ RUN curl -sSL \
 # BASE_PATH in the memo script resolves to /opt/memo, which is correct.
 COPY . /opt/memo/
 RUN chmod +x /opt/memo/bin/memo \
-    && echo '{"args":["--no-sandbox","--disable-setuid-sandbox"]}' \
+    && echo '{"args":["--no-sandbox","--disable-setuid-sandbox","--disable-dev-shm-usage"]}' \
        > /opt/memo/puppeteer-cfg.json \
     && git config --global --add safe.directory '*'
 
